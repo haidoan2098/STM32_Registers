@@ -129,3 +129,100 @@
 ![](https://i.imgur.com/8qaO6po.png)
 
 - File này dùng để xác định hàm khởi đầu của chương trình là Reset_Handler. Đặt kích thước và phân vùng, tức là xác định các phân vùng (.isr_vector, .text,...) nằm trong bộ nhớ Flash, còn (.data, .bss, .heap_stack) nằm trong bộ nhớ RAM.
+
+__________________________________________________________________________________________________________________________________________________________________________
+
+# Lesson 2: Registers Address & BIT-MASK. 
+
+## A. BUS INTERFACE & REGISTERS ADDRESS.
+
+### I. Bus interface.       
+- Bus như là các dây thần kinh, truyền dữ liệu xuống và yêu cầu ngoại vi nào hoạt động. Nó đóng vai trò trong việc kết nối và trao đổi dữ liệu giữa các thành phần trong hệ thống.
+   
+![](https://i.imgur.com/q003rZp.png)
+
+**1. I-Bus:** Phụ trách truyền dữ liệu từ bộ nhớ Flash -> CPU.    
+**2. D-Bus:** Đảm nhận truyền dữ liệu giữa CPU, bộ nhớ (Flash, SRAM) và các thiết bị ngoại vi.       
+**3. S-Bus:** Quản lý giao tiếp giữa các thành phần hệ thống như CPU, bộ nhớ và thiết bị ngoại vi.     
+**4. P-Bus:** Kết nối và quản lý giao tiếp giữa CPU và các thiết bị ngoại vi.        
+**5. AHB (Advanced High-performance Bus)**: Đây là bus chính, tốc độ cao nhất trong hệ thống.          
+**6. APB1 (Advanced Peripheral Bus 1)**: Là bus ngoại vi tốc độ thấp hơn, thường được sử dụng cho các thiết bị ngoại vi không yêu cầu băng thông cao như UART, I2C, SPI.     
+**7. APB2 (Advanced Peripheral Bus 2)**: Tương tự APB1 nhưng thường hoạt động ở tốc độ cao hơn. Nó được sử dụng cho các thiết bị ngoại vi yêu cầu tốc độ và băng thông cao hơn như ADC, một số Timer nhanh.     
+**APB1 & APB2**: Thường được kết nối với AHB hoặc AHB2 thông qua một bridge
+
+### II. Registers Address.      
+**1. Công thức tính**
+```cpp
+    Register Address = Peripheral Base Address + Offset Address
+```
+**Trong đó:**  
+- **Peripheral Base Address**: Đây là địa chỉ cơ sở của một ngoại vi trong bộ vi xử lý.
+- **Register Offset**: Đây là một giá trị offset (độ dời) tính bằng byte, để xác định vị trí của một thanh ghi cụ thể trong vùng nhớ của ngoại vi.      
+- **Register Address**: Đây là địa chỉ của một thanh ghi cụ thể trong ngoại vi.
+
+***Ví dụ:* Truy cập vào thanh ghi RCC_CR (Clock Control Register)**
+
+*Các thanh ghi RCC*
+![](https://i.imgur.com/NDw4U5i.png)
+
+**Base Address của RCC_CR**
+![](https://i.imgur.com/VcoFZRC.png)
+
+**Offset Address của RCC_CR**
+![](https://i.imgur.com/FBCWYWn.png)
+
+**Địa chỉ của RCC_CR**
+```cpp
+Register Address of RCC_CR = 0x40021000 + 0x00 = 0x40021000
+```
+**2. Thuộc tính các Bit**
+
+![](https://i.imgur.com/ehRGiLa.png)
+
+## A. Bit-Mask.
+* Kĩ thuật này giúp ta Set, Clean hay Toggle 1 bit mà không ảnh hưởng đến các bit còn lại.
+### 1. Set Bit - Thiết lập bit thành 1.
+```cpp
+              bitmask |= (1 << i)
+
+              i: Bit vị trí i của bitmask cần bật, i tính từ 0.
+```
+
+**Ví dụ:** Bitmask = 0b0000, Set bit thứ 2.
+```cpp
+    Bitmask |= (1 << 2) => 0b0010
+
+Chứng minh:
+    Bitmask:            0   0   0   0
+                OR(|)
+                        0   0   1   0   =>  (1 << 1): 1 dạng nhị phân đã dịch sang phải 1 bit
+
+    Result:             0   0   1   0
+
+```
+### 2. Clean Bit - Thiết lập bit thành 0.
+```cpp
+              bitmask &= ~(1 << i)
+
+              i: Bit vị trí i của bitmask cần tắt, i tính từ 0.
+```
+
+**Ví dụ:** Bitmask = 0b1111, Clean bit thứ 2.
+```cpp
+    Bitmask &= ~(1 << 2) => 0b1101
+
+Chứng minh:
+    Bitmask:            1   1   1   1
+                AND(&)
+                        1   1   0   1   =>  ~(1 << 1): 1 dạng nhị phân đã dịch sang phải 1 bit và đảo ngược bit.
+                        
+    Result:             1   1   0   1
+
+```
+### 3. Toggle Bit - Chuyển đổi trạng thái của bit từ 0 -> 1 hoặc 1 -> 0.
+```cpp
+              bitmask ^= (1 << i)
+
+              i: Bit thứ i của bitmask cần đổi trạng thái.
+```
+***Lưu ý:*** Thường thì khi làm việc với Bit ta cần biết rõ trạng thái của Bit. Việc sử dụng Toggle Bit khi không biết rõ trạng thái Bit là việc không nên.
