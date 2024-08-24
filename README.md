@@ -179,7 +179,7 @@ Register Address of RCC_CR = 0x40021000 + 0x00 = 0x40021000
 
 ![](https://i.imgur.com/ehRGiLa.png)
 
-## A. Bit-Mask.
+## B. BIT-MASK.
 * Kĩ thuật này giúp ta Set, Clean hay Toggle 1 bit mà không ảnh hưởng đến các bit còn lại.
 ### 1. Set Bit - Thiết lập bit thành 1.
 ```cpp
