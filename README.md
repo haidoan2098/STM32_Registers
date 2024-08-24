@@ -97,7 +97,7 @@
 
 **a. Phân vùng bộ nhớ Flash.**   
 
-<img src="image.png" width="400" height="350">          
+<img src="https://i.imgur.com/7co6ayp.png" width="400" height="350">          
 
 - **.isr_vector**: Lưu Vector Table (hay Vector ngắt).      
 - **.text**: Lưu các lệnh, hàm và các chỉ thị lệnh.     
@@ -106,7 +106,7 @@
 
 **b. Phân vùng bộ nhớ RAM.**     
 
-<img src="image-1.png" width="400" height="400">  
+<img src="https://i.imgur.com/53Oug6B.png" width="400" height="400">  
 
 - **.data**: Lưu biến toàn cục hoặc biến Static đã có giá trị ban đầu.      
 - **.bss**: Lưu biến toàn cục hoặc biến Static chưa có giá trị ban đầu.     
@@ -120,12 +120,12 @@
 
 **a. Startup File**    
 
-![alt text](image-2.png)
+![](https://i.imgur.com/obSjBTH.png)
 
 - File này dùng để khởi tạo giá trị cho MSP, PC và chạy Reset_Handler (Cấu hình hệ thống, khởi tạo vùng nhớ .data, .bss, Copy dữ liệu,...)
 
 **b. LD File - Linker Script**  
 
-![alt text](image-3.png)
+![](https://i.imgur.com/8qaO6po.png)
 
 - File này dùng để xác định hàm khởi đầu của chương trình là Reset_Handler. Đặt kích thước và phân vùng, tức là xác định các phân vùng (.isr_vector, .text,...) nằm trong bộ nhớ Flash, còn (.data, .bss, .heap_stack) nằm trong bộ nhớ RAM.
