@@ -226,3 +226,103 @@ Chứng minh:
               i: Bit thứ i của bitmask cần đổi trạng thái.
 ```
 ***Lưu ý:*** Thường thì khi làm việc với Bit ta cần biết rõ trạng thái của Bit. Việc sử dụng Toggle Bit khi không biết rõ trạng thái Bit là việc không nên.
+
+__________________________________________________________________________________________________________________________________________________________________________
+
+# Lesson 3: RCC Register. 
+
+### I. RCC - Reset and Clock Control.
+
+**1. Reset**: Là quá trình khởi động toàn bộ hệ thống vi điều khiển STM32. Khi hệ thống được reset, tất cả các thanh ghi, bộ nhớ và cấu hình ngoại vi sẽ trở về trạng thái mặc định.            
+**2. Clock**: Là tín hiệu xung nhịp dùng để điều khiển tốc độ hoạt động của vi điều khiển và các thành phần bên trong.      
+**a. System Clock (Hệ thống Clock):** Điều khiển tốc độ hoạt động của CPU và các Bus.       
+**b. Clock Sources (Nguồn Clock):**
+- **HSE (High-Speed External):** Bộ dao động ngoại tốc độ cao sử dụng thạch anh ngoài là chính.     
+- **HSI (High-Speed Internal):** Bộ dao động nội tốc độ cao sử dụng nguồn Clock tích hợp trong vi điều khiển.  
+- **LSE (Low-Speed External):** Bộ dao động ngoại tốc độ thấp, thường dùng cho RTC (Real-Time Clock).     
+- **LSI (LOW-Speed Internal):** Bộ dao động nội tốc độ thấp, thường dùng cho các chức năng như Watchdog.    
+
+**c. PLL (Phase-Clocked Loop):** Được dùng để tăng tần số của nguồn Clock đáp ứng nhu cầu của hệ thống.     
+**d. Prescalers:** Được dùng để chia tần số Clock xuống mức phù hợp cho các thành phần khác nhau.           
+**e. Bus Clock:** Điều khiển tốc độ các Bus như AHB, APB1, APB2. 
+
+***Clock Tree***
+![](https://i.imgur.com/zQXRw54.png)
+***Clock Configuration Map***
+![](https://i.imgur.com/UgkT00D.png)
+
+### II. RCC Register.
+#### **1. RCC Register Map**.
+
+![](https://i.imgur.com/1fxhkeg.png)
+
+- Trong RCC sẽ gồm các thanh ghi khác nhau làm nhiệm vụ khác nhau và mỗi bit của mỗi thanh ghi cũng sẽ có chức năng riêng.      
+**Ví dụ**: Thanh ghi RCC_CR sẽ có bit 0 là HSION.
+
+#### **2. Tên các thanh ghi của RCC**.
+**1. RCC_CR (Clock Control Register)**: Quản lý các nguồn clock chính của vi điều khiển và trạng thái của chúng, bao gồm HSI, HSE và PLL.     
+**2. RCC_CFGR (Clock Configuration Register)**: Cấu hình nguồn clock hệ thống và phân phối clock đến các bộ phận khác của vi điều khiển.        
+**3. RCC_CIR (Clock Interrupt Register)**: Quản lý các ngắt liên quan tới clock, bao gồm các cờ báo hiệu trạng thái của HSI, HSE, PLL.        
+**4. RCC_APB1ENR (APB1 Peripheral Clock Enable Register)**: Bật/Tắt clock cho các thiết bị ngoại vi kết nối với bus APB1, như TIM2, TIM3, UART.       
+**5. RCC_APB2ENR (APB2 Peripheral Clock Enable Register)**: Bật/Tắt clock cho các thiết bị ngoại vi kết nối với bus APB2, như GPIPA, GPIOB.        
+**6. RCC_BDCR (Backup Domain Control Register)**: Quản lý clock và các chức năng liên quan tới domain dự phòng, như LSE và RTC.            
+**7. RCC_CSR (Control/Status Register)**: Quản lý trạng thái và điều khiển các nguồn clock, như LSI và cờ hiệu chuẩn.       
+
+### III. Sơ đồ triển khai RCC - Ví dụ.
+#### **1. Sơ đồ triển khai**.
+![](https://i.imgur.com/RgoK9aD.png)
+
+**Enable Clock Source (Mở nguồn Clock)**: Ta sẽ phải cấu hình làm sao để mở được Clock, thường ta sẽ dùng HSE (Thạch anh nội) và HSI (Thạch anh ngoại), nếu không qua PLL (bộ nhân tần) thì nó chỉ có 8MHz. Nhưng nếu qua bộ này rồi thì Clock sẽ có tốc độ tối đa lên đến 72MHz (STM32F1).      
+**Wait to Stable (Đợi cho nó ổn định)**         
+ví dụ:      
+- HSEON (do phần mềm điều khiển): Khi ta bật bit này lên, ta đang yêu cầu vi điều khiển kích hoạt và khởi động bộ HSE. Tuy nhiên, không có nghĩa là nó sẽ bật lên ngay lập tức. Bộ dao động cần thời gian ổn định sau khi được kích hoạt.        
+- HSERDY (do phần cứng thiết lập): Khi HSE đã ổn định, phần cứng tự động báo hiệu cờ (thiết lập) HSERDY lên mức 1. Điều này thông báo cho phần mềm rằng HSE đã sẵn sàng hoạt động.              
+     
+**Clock Configuration (Cấu hình xung nhịp)**       
+- System Clock (SYSCLK): Xung nhịp hệ thống, có thể chọn từ HSI, HSE, hoặc PLL.
+- AHB (Advanced High-performance Bus): Quản lý tốc độ xung nhịp cho các bus và bộ nhớ.
+- APB1 & APB2 (Advanced Peripheral Bus): Quản lý tốc độ xung nhịp cho các ngoại vi với tốc độ cao và thấp.      
+Pripheral Clock enable.
+
+**Pripheral Clock enable (Cho phép Clock đến ngoại vi)**.        
+
+#### **2. Ví dụ**.
+- Chọn đầu vào là HSE, dùng HSE làm Clock hệ thống và thiết lập sao cho HCLK = 4MHz. (HCLK là tín hiệu xung nhịp chính để điều khiển toàn bộ hệ thống, được tạo từ SYSCLK, cung cấp nhịp cho CPU, bus AHB và APB và các ngoại vi khác).
+![](https://i.imgur.com/oapz6SZ.png)
+![](https://i.imgur.com/SmLTfw1.png)
+
+**Code**
+```cpp
+#include <stdint.h>
+
+#define RCC_BASE_ADDR 		0x40021000
+
+#define RCC_CR 				(*(volatile uint32_t *)(RCC_BASE_ADDR + 0x00))
+#define RCC_CFGR			(*(volatile uint32_t *)(RCC_BASE_ADDR + 0x04))
+
+#define RCC_CR_HSEON		(1 << 16)
+#define RCC_CR_HSERDY		(1 << 17)
+
+#define RCC_CFGR_SW_HSE		(0b01 << 0)
+#define RCC_CFGR_SWS_HSE	(0b01 << 2)
+#define RCC_CFGR_HPRE_DIV2	(0b1000 << 4)
+
+int main(void)
+{
+	// Bật HSE
+	RCC_CR |= RCC_CR_HSEON;
+	// Đợi cho đến khi HSE sẵn sàng
+	while (!(RCC_CR & RCC_CR_HSERDY));
+	
+	//Chọn Clock hệ thống là HSE	
+	RCC_CFGR |= RCC_CFGR_SW_HSE;
+	// Đợi cho đến khi xung nhịp hệ thống thực sự chuyển sang HSE
+	while ((RCC_CFGR & (0b11 << 2)) != RCC_CFGR_SWS_HSE);
+	
+	// Chia tần số HCLK thành HSE/2 để HCLK = 4
+	RCC_CFGR |= RCC_CFGR_HPRE_DIV2;
+}
+```
+**Kiểm tra bằng Debug để xem thanh ghi của RCC**
+![](https://i.imgur.com/xRK4zyt.png)
+
