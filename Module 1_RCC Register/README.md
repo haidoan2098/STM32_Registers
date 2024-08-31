@@ -20,5 +20,5 @@ Cấu hình: Bật thạch anh ngoài (HSE) -> bộ chia 1 -> nguồn đầu và
 
 
 ### BÀI TẬP 
-Dùng: STM32F103C8T6. 
+Dùng: STM32F407VGT6.                      
 Xây dựng thư viện Clock Config để MCU có tần số đạt giá trị tối đa (72MHz).
