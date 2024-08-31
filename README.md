@@ -229,7 +229,7 @@ Chứng minh:
 
 __________________________________________________________________________________________________________________________________________________________________________
 
-# Lesson 3: RCC Register. 
+# Lesson 3: RCC. 
 
 ### I. RCC - Reset and Clock Control.
 
@@ -268,8 +268,7 @@ ________________________________________________________________________________
 **6. RCC_BDCR (Backup Domain Control Register)**: Quản lý clock và các chức năng liên quan tới domain dự phòng, như LSE và RTC.            
 **7. RCC_CSR (Control/Status Register)**: Quản lý trạng thái và điều khiển các nguồn clock, như LSI và cờ hiệu chuẩn.       
 
-### III. Sơ đồ triển khai RCC - Ví dụ.
-#### **1. Sơ đồ triển khai**.
+### III. Sơ đồ triển khai RCC.
 ![](https://i.imgur.com/RgoK9aD.png)
 
 **Enable Clock Source (Mở nguồn Clock)**: Ta sẽ phải cấu hình làm sao để mở được Clock, thường ta sẽ dùng HSE (Thạch anh nội) và HSI (Thạch anh ngoại), nếu không qua PLL (bộ nhân tần) thì nó chỉ có 8MHz. Nhưng nếu qua bộ này rồi thì Clock sẽ có tốc độ tối đa lên đến 72MHz (STM32F1).      
@@ -286,9 +285,14 @@ Pripheral Clock enable.
 
 **Pripheral Clock enable (Cho phép Clock đến ngoại vi)**.        
 
-#### **2. Ví dụ**.
-- Chọn đầu vào là HSE, dùng HSE làm Clock hệ thống và thiết lập sao cho HCLK = 4MHz. (HCLK là tín hiệu xung nhịp chính để điều khiển toàn bộ hệ thống, được tạo từ SYSCLK, cung cấp nhịp cho CPU, bus AHB và APB và các ngoại vi khác).
+### IV. **Hướng dẫn cấu hình Registers**.
+**Ví dụ:** Chọn đầu vào là HSE, dùng HSE làm Clock hệ thống và thiết lập sao cho HCLK = 4MHz. (HCLK là tín hiệu xung nhịp chính để điều khiển toàn bộ hệ thống, được tạo từ SYSCLK, cung cấp nhịp cho CPU, bus AHB và APB và các ngoại vi khác).
 ![](https://i.imgur.com/oapz6SZ.png)
+
+**Hướng dẫn:**
+- Đầu vào là HSE, nên ta tới thanh ghi RCC_CR để tìm và bật thanh ghi có chức năng đó lên. Sau ghi bật xong thì ta cũng thiết lập để đợi clock ổn định.         
+- Tại bộ System Clock Mux chọn HSE, tìm tới thanh ghi RCC_CFGR, sau khi thiết lập thành công thì Clock cho CPU đã hoạt động (HCLK).      
+- Ta có thể chia tần số AHB để thay đổi HCLK phù hợp đưa ra các ngoại vi khác.
 ![](https://i.imgur.com/SmLTfw1.png)
 
 **Code**
@@ -326,3 +330,64 @@ int main(void)
 **Kiểm tra bằng Debug để xem thanh ghi của RCC**
 ![](https://i.imgur.com/xRK4zyt.png)
 
+__________________________________________________________________________________________________________________________________________________________________________
+
+# Lesson 4: GPIO & AFIO. 
+
+### I. GPIO - AFIO.       
+
+#### **1. Output.**     
+**Sơ đồ nguyên lý.**
+![](https://i.imgur.com/yKHugmI.png)
+* Ở Mode Push-Pull thì ra có thể xuất ra chân GPIO cả 2 giá trị 0 và 1.  
+
+#### **2. Input.**
+**a. Mức điện áp ngõ vào** 
+- Mức logic 0 của chân Input là từ -0,3V -> 1.164V.     
+- Mức logic 1 của chân Input là từ 1.833V -> 4v.   
+
+**b. Sơ đồ nguyên lý.**  
+- Bộ TTL Schmitt trigeer có tác dụng convert điện áp đầu vào luôn là 0 hoặc 1.        
+
+*Khi chưa qua bộ TTL Schmitt trigger*
+![](https://i.imgur.com/1lJgWQT.png)
+
+*Khi qua bộ TTL Schmitt trigger*
+![](https://i.imgur.com/pp49EDn.png)
+
+**c. AFIO.**        
+- Alternate Function Input/Output là một chế độ đặc biệt của các chân GPIO, cho phép các chân này hoạt động với những chức năng thay thế khác ngoài chức năng cơ bản là IO. Ứng dụng lớn nhất là ta muốn sử dụng chân GPIO cho các giao tiếp ngoại vi như I2C, TIMER, PWM,...
+
+![](https://i.imgur.com/ZvbWcqc.png)            
+
+### II. GPIO Registers.      
+#### **1. GPIO Mode.**      
+![](https://i.imgur.com/8TWhwv3.png)
+
+#### **2. Tên các thanh ghi GPIO Output.**  
+**1. GPIOx_CRL (Port Configuration Register Low):** Cấu hình chế độ và chức năng cho các chân GPIO từ 0 đến 7.                                       
+**2. GPIOx_CRH (Port Configuration Register High):** Cấu hình chế độ và chức năng cho các chân GPIO từ 8 đến 15.       
+**3. GPIOx_IDR (Port Input Data Register):** Đọc trạng thái của các chân GPIO.      
+**4. GPIOx_ODR (Port Output Data Register):** Ghi trạng thái của các chân GPIO.     
+**5. GPIOx_BSRR (Port Pin Set/Reset Register):** Đặt hoặc xóa trạng thái của các bit GPIO. Thanh ghi này được truy cập theo word, và có thể đặt hoặc xóa từng bit một cách độc lập mà không cần phải đọc-modify-ghi toàn bộ thanh ghi ODR.
+**6. GPIOx_BRR (Port Pin Reset Register):** Xóa các bit GPIO. Khi ghi một giá trị vào thanh ghi này, các bit tương ứng trong thanh ghi ODR sẽ được xóa về 0.     
+**7. GPIOx_LCKR (Port Configuaration Lock Register):** Khóa cấu hình chân GPIO để ngăn chặn thay đổi.           
+
+### III. **Hướng dẫn cấu hình Registers**.
+
+- Để GPIO hoạt động được thì ta phải cấp Clock cho nó hoạt động.            
+**Ví dụ:** Để GPIOA hoạt động.
+```cpp
+RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+```  
+![](https://i.imgur.com/oV3ndH6.png)            
+
+#### **1. Output**.         
+- Sau khi ta đã cấp Clock cho GPIO, ta cấu hình là Output.         
+- Tiếp theo ta cấu hình nó là Mode: Open-Drain hay Push-Pull.       
+- Ta có thể ghi giá trị vào GPIOx đó bằng cách tìm đến thanh ghi làm chức năng ghi vào (thường là ODR).         
+
+#### **2. Input**. 
+- Sau khi ta đã cấp Clock cho GPIO, ta cấu hình là Input.         
+- Tiếp theo ta cấu hình nó là Mode: Pull-Up hay Pull-Down.       
+- Ta có thể đọc giá trị vào GPIOx đó bằng cách tìm đến thanh ghi làm chức năng ghi vào (thường là IDR).   
